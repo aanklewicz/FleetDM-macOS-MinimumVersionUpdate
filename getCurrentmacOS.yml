@@ -1,0 +1,53 @@
+name: Check for new versions of macOS and update DDM settings for FleetDM
+
+on:
+  schedule:
+    - cron: '0 17 * * *' # Runs daily at 1 PM Eastern Time
+  workflow_dispatch:
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  run_script_and_commit:
+    runs-on: macos-latest
+    steps:
+      - name: Install Dependencies
+        run: |
+          brew install yq
+
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Execute Script
+        run: |
+          ls -a
+          chmod +x ./runner-scripts/getCurrentmacOS.zsh
+          ./runner-scripts/getCurrentmacOS.zsh
+
+      - name: Check for Changes and Commit
+        id: check_commit
+        run: |
+          git add .
+          if ! git diff --cached --quiet; then
+            git config --local user.email "actions@github.com"
+            git config --local user.name "GitHub Actions"
+            git commit -m "Automated commit of changes"
+            echo "::set-output name=changed::true"
+          else
+            echo "::set-output name=changed::false"
+          fi
+
+      - name: Create Pull Request
+        if: steps.check_commit.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.RW_REPO_TOKEN }}
+          branch: automated-changes
+          title: Automated Changes
+          body: |
+            This pull request contains automated changes detected during the daily workflow run.
