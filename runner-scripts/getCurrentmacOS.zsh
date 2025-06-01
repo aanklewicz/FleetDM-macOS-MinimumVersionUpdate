@@ -23,7 +23,7 @@ macOSJsonFeed=""
 ## ====================================================================================================
 
 # Check if $macOSJsonFeed is blank
-if [[ -z "macOSJsonFeed" ]]; then
+if [[ -z "${macOSJsonFeed}" ]]; then
     # If blank, set it to the fallback URL
     macOSJsonFeed="https://sofafeed.macadmins.io/v1/macos_data_feed.json"
 fi
@@ -38,8 +38,8 @@ jsonData=$(curl -s ${macOSJsonFeed})
 latestProductVersion=$(echo "$jsonData" | jq -r '.OSVersions[0].Latest.ProductVersion')
 releaseDate=$(echo "$jsonData" | jq -r '.OSVersions[0].Latest.ReleaseDate')
 releaseDate=$(echo "$releaseDate" | sed 's/T.*//')
-macosUpdatesDeadline=$(${yq} .controls.macos_updates.deadline < ${ymlConfigFile})
-macosUpdatesVersion=$(${yq} .controls.macos_updates.minimum_version < ${ymlConfigFile})
+macosUpdatesDeadline=$(${yq} .controls.macos_updates.deadline <${ymlConfigFile})
+macosUpdatesVersion=$(${yq} .controls.macos_updates.minimum_version <${ymlConfigFile})
 
 # Print the extracted values
 echo "Latest macOS Version: $latestProductVersion"
@@ -64,11 +64,10 @@ else
 
     echo "Earliest Release Date for Major Version $major_version: $earliest_release_date"
 
-
     # Function to calculate date difference in days (GNU date)
     date_difference() {
-        local start_date="$1"  # YYYY-MM-DD
-        local end_date="$2"    # YYYY-MM-DD
+        local start_date="$1" # YYYY-MM-DD
+        local end_date="$2"   # YYYY-MM-DD
 
         local start_seconds=$(date -j -f "%Y-%m-%d" "$start_date" "+%s")
         local end_seconds=$(date -j -f "%Y-%m-%d" "$end_date" "+%s")
@@ -86,7 +85,7 @@ else
     days_ago=$(date_difference "$earliest_release_date" "$today")
 
     # Check if the release was more than majorReleaseDelay days ago
-    if (( $days_ago > $majorReleaseDelay )); then
+    if (($days_ago > $majorReleaseDelay)); then
         release="minor"
     else
         release="major"
